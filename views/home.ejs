@@ -4,6 +4,7 @@
     <p>
         <%= homeStartingContent%>
     </p>
+    <P>
     <div class="box">
         <%for (var i=0; i<posts.length; i++) { %>
             <%console.log(posts[i].postTitle);%>
@@ -14,8 +15,11 @@
                 </div>
                 <div class="postBody">
                     <p>
-                        <%=posts[i].postBody%>
+                        <%=posts[i].postBody.substring(1, 100) + " ..." %>
+                            <a href="/posts/<%=posts[i].postTitle%>">Read More</a>
                     </p>
                 </div>
                 <%}%>
     </div>
+    </P>
+    <%- include("partials/footer") %>
