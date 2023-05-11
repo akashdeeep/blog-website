@@ -2,6 +2,31 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash");
+const mongoose = require("mongoose");
+mongoose.connect(
+	"mongodb+srv://respecctemp1:123@cluster0.x61dt5h.mongodb.net/blogsDB",
+	{
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+	}
+);
+
+const blogSchema = new mongoose.Schema({
+	postTitle: String,
+	postBody: String,
+	postDate: Date,
+	postAuthor: String,
+});
+
+const Blog = mongoose.model("Blog", blogSchema);
+const blog = new Blog({
+	postTitle: "Test",
+	postBody: "Test",
+	postDate: Date.now(),
+	postAuthor: "respecc",
+});
+// blog.save();
+
 const homeStartingContent =
 	"Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent =
@@ -16,13 +41,19 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-var posts = [];
+// var posts = [];
 
 app.get("/", (req, res) => {
-	res.render("home", {
-		homeStartingContent: homeStartingContent,
-		posts: posts,
-	});
+	try {
+		Blog.find().then((foundItems) => {
+			res.render("home", {
+				homeStartingContent: homeStartingContent,
+				posts: foundItems,
+			});
+		});
+	} catch (err) {
+		console.log(err, "insert error");
+	}
 });
 
 app.get("/about", (req, res) => {
@@ -37,28 +68,31 @@ app.get("/compose", (req, res) => {
 	res.render("compose");
 });
 
-app.get("/posts/:postTitle", function (req, res) {
+app.get("/posts/:id", function (req, res) {
 	// console.log(req.params.postTitle);
-	var requestedTitle = _.lowerCase(req.params.postTitle);
-	posts.forEach(function (post) {
-		var storedTitle = _.lowerCase(post.postTitle);
-		if (storedTitle === requestedTitle) {
+	var id = req.params.id;
+	console.log(id);
+	try {
+		Blog.findById(id).then((foundItems) => {
 			res.render("post", {
-				postTitle: post.postTitle,
-				postBody: post.postBody,
+				postTitle: foundItems.postTitle,
+				postBody: foundItems.postBody,
 			});
-		}
-	});
+		});
+	} catch (err) {
+		console.log(err, "insert error");
+	}
 });
 
 app.post("/compose", (req, res) => {
 	var postTitle = req.body.postTitle;
 	var postBody = req.body.postBody;
-	var post = {
+	const blog = new Blog({
 		postTitle: postTitle,
 		postBody: postBody,
-	};
-	posts.push(post);
+	});
+	blog.save();
+
 	res.redirect("/");
 });
 
